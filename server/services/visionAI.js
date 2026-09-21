@@ -4,6 +4,8 @@
  * Primary: Google Gemini 2.0 Flash (via @google/generative-ai SDK + AI Studio API key)
  * Fallback: Groq Llama 4 Scout Vision (only used if Gemini rate-limits)
  */
+import { sanitizeCitations, validateCitations } from './citationGuard.js';
+
 
 const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const GEMINI_VISION_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
@@ -532,8 +534,18 @@ JSON schema:
   const text = await callTextAI(prompt);
   const parsed = parseVisionResponse(text, 'legalNotice');
 
+  const guardedContent = sanitizeCitations(parsed.noticeContent);
+  const guardedConsequences = sanitizeCitations(parsed.consequencesIfIgnored);
+  const guardedSections = (Array.isArray(parsed.legalSectionsCited) ? parsed.legalSectionsCited : [])
+    .filter((c) => validateCitations(String(c)).ok);
+  const citationsRemoved = [...guardedContent.removed, ...guardedConsequences.removed];
+
   return {
     ...parsed,
+    noticeContent: guardedContent.text,
+    consequencesIfIgnored: guardedConsequences.text,
+    legalSectionsCited: guardedSections,
+    citationsRemoved,
     generatedAt: new Date().toISOString(),
     caseReference: violation.id,
     issuedTo: violation.owner_name || 'Property Owner',

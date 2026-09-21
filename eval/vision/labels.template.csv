@@ -1,0 +1,7 @@
+image,has_violation,violation_type,labeler,notes
+# has_violation: 1 = image contains an unauthorized construction, 0 = clean. Ground truth must come from
+# a human (ideally checked against sanctioned plans / field inspection), not from the model.
+# Aim for a balanced set (e.g. 50 positive / 50 negative) across different wards and zoom levels.
+# Delete these comment lines' examples and replace with real rows, e.g.:
+# ward12_tile_001.png,1,Unauthorized Floor Addition,alice,slab visible on 4th floor
+# ward12_tile_002.png,0,,alice,compliant apartment block

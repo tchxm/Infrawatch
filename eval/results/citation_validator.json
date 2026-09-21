@@ -1,0 +1,10 @@
+{
+  "fabricated_n": 20,
+  "caught": 20,
+  "catch_rate": 1,
+  "valid_n": 20,
+  "false_positives": 0,
+  "false_positive_rate": 0,
+  "missed": [],
+  "false_positive_examples": []
+}

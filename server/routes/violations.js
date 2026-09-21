@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getDb } from '../db/connection.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { buildWardScope, canAccessWard } from '../middleware/access.js';
+import { getSlaHours, getSlaStatus } from '../services/sla.js';
 import { analyzeSatelliteImagery, generateCaseReviewDossier } from '../services/gemini.js';
 
 const router = Router();
@@ -275,10 +276,8 @@ router.get('/crisis-feed', (req, res) => {
     const enrichedCases = criticalCases.map((c) => {
       const detectedAt = new Date(c.created_at + 'Z'); // SQLite UTC
       const ageHours = (Date.now() - detectedAt.getTime()) / 3600000;
-      const slaHours = c.confidence >= 90 ? 4 : c.confidence >= 80 ? 12 : 24;
-      const slaStatus = ageHours > slaHours ? 'BREACHED'
-                      : ageHours > slaHours * 0.8 ? 'AT_RISK'
-                      : 'ON_TIME';
+      const slaHours = getSlaHours(c.confidence);
+      const slaStatus = getSlaStatus(ageHours, slaHours);
       return {
         ...c,
         ageHours: Math.round(ageHours * 10) / 10,
