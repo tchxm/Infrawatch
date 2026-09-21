@@ -1,0 +1,67 @@
+{
+  "scenarios": [
+    {
+      "name": "primary_ok",
+      "ok": true,
+      "provider_reported": "gemini",
+      "calls": {
+        "gemini": 1,
+        "groq": 0
+      }
+    },
+    {
+      "name": "gemini_429",
+      "ok": true,
+      "provider_reported": "gemini",
+      "calls": {
+        "gemini": 1,
+        "groq": 1
+      }
+    },
+    {
+      "name": "gemini_503",
+      "ok": true,
+      "provider_reported": "gemini",
+      "calls": {
+        "gemini": 1,
+        "groq": 1
+      }
+    },
+    {
+      "name": "gemini_timeout",
+      "ok": true,
+      "provider_reported": "gemini",
+      "calls": {
+        "gemini": 1,
+        "groq": 1
+      }
+    },
+    {
+      "name": "gemini_400",
+      "ok": false,
+      "error": "[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [400 ] HTTP 400",
+      "calls": {
+        "gemini": 1,
+        "groq": 0
+      }
+    },
+    {
+      "name": "both_fail",
+      "ok": false,
+      "error": "Both AI providers unavailable. gemini: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:",
+      "calls": {
+        "gemini": 1,
+        "groq": 1
+      }
+    },
+    {
+      "name": "no_secondary_key",
+      "ok": false,
+      "error": "[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [429 ] HTTP 429",
+      "calls": {
+        "gemini": 1,
+        "groq": 0
+      }
+    }
+  ]
+}
