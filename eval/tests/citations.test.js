@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { validateCitations } from '../lib/citations.js';
+import { validateCitations } from '../../server/services/citationGuard.js';
 import { record } from '../lib/results.js';
 
 const fx = JSON.parse(fs.readFileSync(new URL('../fixtures/citations.json', import.meta.url)));

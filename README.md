@@ -73,7 +73,7 @@ Vercel rewrites `/api/*` to the Render backend (`client/vercel.json`); locally, 
 
 **AI failover in one place.** Every vision/text call in `visionAI.js` goes through a single dispatcher with a per-call timeout (default 30 s, `AI_TIMEOUT_MS`). Only retryable errors (429, quota, 503, unavailable, timeout) trigger failover; a 400 surfaces immediately instead of burning the second provider. Verified against stubbed providers in `eval/tests/failover.test.js`. Limitation: the notice route in `gemini.js` uses one provider and does not fail over.
 
-**Citation guardrail, honestly.** The prompt names the only statutes and sections the model may cite (Karnataka Municipal Corporations Act 1976 s.308/321/321A/322, BBMP Building Bye-laws 2003, Karnataka Town and Country Planning Act 1961) and instructs a fallback phrase when unsure. That reduces, but does not eliminate, hallucination: there is **no server-side check** of the model's output, and the eval confirms fabricated sections pass through unchanged. A reference validator in `eval/lib/citations.js` shows a post-generation allowlist check is straightforward (20/20 synthetic fabrications caught, 0/20 false positives) and is the obvious next step. Every notice is a draft for officer review, and the section allowlist has not been verified against the statutes by a lawyer.
+**Citation guardrail, two layers.** The prompt names the only statutes and sections the model may cite (Karnataka Municipal Corporations Act 1976 s.308/321/321A/322, BBMP Building Bye-laws 2003, Karnataka Town and Country Planning Act 1961) and instructs a fallback phrase when unsure. Prompts alone cannot prevent hallucination, so `server/services/citationGuard.js` also checks every AI-drafted notice against the allowlist and replaces any off-allowlist citation with the fallback phrase, reporting what it removed in `citationsRemoved`. Measured before/after: the app passed 20/20 fabricated citations through with no guard, and catches 20/20 with it (0/20 false positives on valid text; synthetic fixtures, not a claim about real model hallucination rates). Every notice is still a draft for officer review, and the allowlist has not been verified against the statutes by a lawyer.
 
 ## Run locally
 
@@ -128,7 +128,7 @@ Mohammed Afnan (GitHub: [tchxm](https://github.com/tchxm)).
 
 ## Evaluation
 
-See [`eval/README.md`](eval/README.md) for methodology and results: SLA routing (9/9 boundary cases, monotone over a 201-point sweep), failover (7/7 scenarios behave as designed with stubbed providers), citation guardrail (app-side catch 0/20, reference validator 20/20 on synthetic fixtures), and vision accuracy (**pending**, harness and labeling template included).
+See [`eval/README.md`](eval/README.md) for methodology and results: SLA routing (9/9 boundary cases, monotone over a 201-point sweep), failover (7/7 scenarios behave as designed with stubbed providers), citation guardrail (app-side catch 0/20 before the guard was added, 20/20 after; 0/20 false positives on synthetic fixtures), and vision accuracy (**pending**, harness and labeling template included).
 
 ## License
 

@@ -1,13 +1,10 @@
 /**
- * Reference citation validator used by the eval.
- *
- * IMPORTANT: this is NOT part of the InfraWatch runtime. The app's only
- * anti-hallucination guard today is a prompt instruction (see
- * server/services/visionAI.js, generateLegalNoticeFromAnalysis, and
- * server/services/gemini.js buildPrompt). This module shows what a
- * deterministic post-generation check against the SAME allowlist would catch,
- * and the eval measures it. The allowlist is copied from the app's prompt; it
- * has NOT been verified against the statutes themselves.
+ * Deterministic post-generation citation guard.
+ * Prompts alone cannot stop a model from inventing statute sections, so every AI-drafted
+ * notice is checked against an allowlist. Offending clauses are replaced with the safe
+ * fallback phrase and reported so an officer can see what was removed.
+ * NOTE: the allowlist mirrors the prompt in visionAI.js/gemini.js and has not been
+ * verified against the statutes themselves.
  */
 export const ALLOWED = {
   KMC: new Set(['308', '321', '321A', '322']), // Karnataka Municipal Corporations Act, 1976
@@ -53,4 +50,24 @@ export function validateCitations(input) {
     }
   }
   return { ok: violations.length === 0, violations, citations, usedFallbackPhrase: FALLBACK.test(text) };
+}
+
+export const FALLBACK_PHRASE = 'Refer to applicable BBMP Building Bye-laws, 2003';
+
+/** Replaces any clause citing an off-allowlist authority with the fallback phrase. */
+export function sanitizeCitations(text) {
+  const input = String(text ?? '');
+  const removed = [];
+  const lines = input.split(/\r?\n/).map((line) => {
+    const clauses = line.split(/(;)/);
+    return clauses.map((clause) => {
+      if (clause === ';') return clause;
+      const { ok } = validateCitations(clause);
+      if (ok) return clause;
+      removed.push(clause.trim());
+      const label = clause.match(/^\s*([A-Z][A-Z &]+:)/);
+      return (label ? label[1] + ' ' : '') + FALLBACK_PHRASE;
+    }).join('');
+  });
+  return { text: lines.join('\n'), removed, ok: removed.length === 0 };
 }

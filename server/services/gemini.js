@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
+import { sanitizeCitations } from './citationGuard.js';
 
 const provider = (process.env.AI_PROVIDER || 'groq').toLowerCase();
 const geminiKey = process.env.GEMINI_API_KEY;
@@ -109,9 +110,11 @@ async function generateWithGroq(violation, templateContent = null) {
 
     console.log('[ai] Groq response received');
 
+    const guarded = sanitizeCitations(text);
     return {
       success: true,
-      content: text,
+      content: guarded.text,
+      citationsRemoved: guarded.removed,
       model: GROQ_MODEL,
       provider: 'groq',
       generatedAt: new Date().toISOString(),
@@ -137,9 +140,11 @@ async function generateWithGemini(violation, templateContent = null) {
       throw new Error('Gemini returned an empty notice draft.');
     }
 
+    const guarded = sanitizeCitations(text);
     return {
       success: true,
-      content: text,
+      content: guarded.text,
+      citationsRemoved: guarded.removed,
       model: GEMINI_MODEL,
       provider: 'gemini',
       generatedAt: new Date().toISOString(),
